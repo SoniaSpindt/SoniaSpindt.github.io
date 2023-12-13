@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+    <style>
+        .bar {
+            fill: gold;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 8px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+<body>
+    <svg width="1000" height="800"></svg>
+    <div class="tooltip"></div>
+    <script>
+        var dataset1 = [1992, 1993, 1994, 1995, 1996, 1997, 1998]; // x
+        var dataset2 = [30, 10, 50, 20, 35, 45, 25]; // y
+
+        // Set up the SVG and margins
+        var svg = d3.select("svg"),
+            margin = { top: 50, right: 50, bottom: 50, left: 50 },
+            width = svg.attr("width") - margin.left - margin.right,
+            height = svg.attr("height") - margin.top - margin.bottom;
+
+        // Create a group element to hold the bars
+        var g = svg.append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // Set up the scale for x and y
+        var x = d3.scaleBand()
+            .domain(dataset1.map(function (d) { return d; }))
+            .range([0, width])
+            .padding(0.1);
+
+        var y = d3.scaleLinear()
+            .domain([0, d3.max(dataset2)])
+            .range([height, 0]);
+
+        // Create bars
+        var bars = g.selectAll(".bar")
+            .data(dataset1)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", function (d, i) { return x(d); })
+            .attr("y", height) // Start the bars at the bottom of the chart
+            .attr("width", x.bandwidth())
+            .attr("height", 0) // Start the bars with zero height
+            .on("mouseover", handleMouseOver)
+            .on("mouseout", handleMouseOut);
+
+        // Transition to grow the bars
+        bars.transition()
+            .duration(1000) // Adjust the duration as needed
+            .attr("y", function (d, i) { return y(dataset2[i]); })
+            .attr("height", function (d, i) { return height - y(dataset2[i]); });
+
+        // Add x-axis
+        g.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        // Add y-axis
+        g.append("g")
+            .call(d3.axisLeft(y));
+
+        // Tooltip
+        var tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        function handleMouseOver(d, i) {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 0.9);
+            tooltip.html("Count: " + dataset2[i])
+                .style("left", (d3.event.pageX) + "px")
+                .style("top", (d3.event.pageY - 28) + "px");
+        }
+
+        function handleMouseOut(d, i) {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        }
+    </script>
+</body>
+</html>
